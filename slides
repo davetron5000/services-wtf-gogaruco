@@ -1,0 +1,406 @@
+Services, Scale, Backgrounding and WTF is going on here?!??!
+!TITLE
+Services, Scale, Backgrounding and WTF is going on here?!??!
+@davetron5000
+http://www.naildrivin5.com/blog
+
+!NORMAL
+A story
+about reasonable developers and reasonable decisions
+creating a service-oriented architecture
+
+!IMAGE: background=262626
+images/LSLogo.jpg
+
+!NORMAL
+Tech Lead, Payments
+(i.e. the money)
+
+!SECTION
+Our story begins&hellip;
+
+!CODE
+class PeopleController << ApplicationController
+  def create
+    @person = Person.create(params[:person])
+    if @person.valid?
+      UserMailer.send_welcome_email(person)
+      redirect_to people_path
+    else
+      flash[:error] = 'Invalid Data'
+      redirect_to new_person_path
+    end
+  end
+end
+
+!BULLETS
+Problem
+* Enter my stuff
+* Save to DB
+* Wait for Mailer
+* Wasted Proccessor Time
+
+!SECTION
+Background Processing!
+
+!CODE: callout=4
+def create
+  @person = Person.create(params[:person])
+  if @person.valid?
+    Resque.enqueue(NewPersonEvent,:id => @person.id)
+    redirect_to people_path
+  else
+     # ...
+  end
+end
+
+!CODE
+class NewPersonEvent
+  def self.perform(id)
+    person = Person.find(id)
+    UserMailer.send_welcome_email(person)
+  end
+end
+
+!SECTION
+A few months later&hellip;
+
+!CODE: callout=4
+def create
+  @person = Person.create(params[:person])
+  if @person.valid?
+    Resque.enqueue(NewPersonEvent,:id => @person.id) #! ETIMEDOUT
+  else
+     # ...
+  end
+end
+
+!BULLETS
+Timeout to Redis
+* Person record created&hellip;
+* &hellip;but email wasn't sent
+* Person can't be validated
+* Unique email constraints anyone?
+
+!COMMANDLINE
+> bundle exec rails console production
+irb> has_a_sad
+
+!BULLETS
+Solution
+* Person created and email sent
+* <strong>or</strong>
+* No email sent and no person created
+* Transactions
+
+!CODE: callout=2,9
+def create
+  Person.transaction do
+    @person = Person.create(params[:person])
+    if @person.valid?
+      Resque.enqueue(NewPersonEvent,:id => @person.id)
+      redirect_to people_path
+    else
+       # ...
+    end
+  end
+end
+
+!SECTION
+A few weeks later&hellip;
+
+!CODE: callout=3
+class NewPersonEvent
+  def self.perform(id)
+    person = Person.find(id) #! ActiveRecord::NotFoundError
+    UserMailer.send_welcome_email(person)
+  end
+end
+
+!BULLETS
+WTF?
+* Got the id from the database
+* Event created
+* Event processed
+* Transaction not yet committed
+
+!CODE
+file://src/new_person_event.rb
+
+!CODE: callout=2,5,6,7,9
+file://src/new_person_event_refactor.rb
+
+!BULLETS
+Better(ish)
+* Likely to complete in 5 retries
+* Can replay any that bubble up
+* No grand re-architecture required
+
+!SECTION
+Acquisition
+
+!BULLETS
+Bulk Upload some Users
+* Send welcome emails
+* Same business logic
+
+!NORMAL
+After we create a Person&hellip;
+&hellip;run our business logic
+
+!CODE: callout=4,11
+class Person < ActiveRecord::Base
+  # ...
+
+  after_create :send_new_person_event
+
+  # ...
+
+private
+
+  def send_new_person_event
+    Resque.enqueue(NewPersonEvent,:id => @person.id)
+  end
+end
+
+!CODE: callout=-2,-10
+def create
+  Person.transaction do
+    @person = Person.create(params[:person])
+    if @person.valid?
+      Resque.enqueue(NewPersonEvent,:id => @person.id)
+      redirect_to people_path
+    else
+       # ...
+    end
+  end
+end
+
+!CODE
+def create
+  @person = Person.create(params[:person])
+  if @person.valid?
+    redirect_to people_path
+  else
+     # ...
+  end
+end
+
+!BULLETS
+Reasonable
+* Other approaches exist
+* Some might be better
+* Nothing inherently wrong here
+
+!NORMAL
+A few months later&hellip;
+&hellip;we need to log stats
+
+!CODE: callout=3
+def send_new_person_event
+  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Stats.ping(:new_person)
+end
+
+!NORMAL
+Weeks go by&hellip;
+&hellip;and we now have a cache to warm
+
+!CODE: callout=4
+def send_new_person_event
+  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Stats.ping(:new_person)
+  PersonCache.put(:name,@person.id,@person.name)
+end
+
+!NORMAL
+Skunkworks project!
+
+!CODE: callout=5,6
+def send_new_person_event
+  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Stats.ping(:new_person)
+  PersonCache.put(:name,@person.id,@person.name)
+  PetProject.frobnosticate(
+      HexDigest.md5_sha1_hash_rot13(@person.inspect))
+end
+
+!BULLETS
+Reasonable?
+* It looks a mess now
+* But each line was <em>reasonable</em>
+* Technical Debt
+
+!BULLETS
+Mailers
+* Deprecated
+* New Awesome Mail Service
+* Just a Simple REST Call
+
+!CODE: callout=8
+file://src/new_person_event_mailer_service.rb
+
+!NORMAL
+Meanwhile&hellip;
+a Refactoring's afoot!
+
+!CODE: callout=3,4,5,6 transition=0
+def send_new_person_event
+  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Stats.ping(:new_person)
+  PersonCache.put(:name,@person.id,@person.name)
+  PetProject.frobnosticate(
+      HexDigest.md5_sha1_hash_rot13(@person.inspect))
+end
+
+!CODE: callout=-3,-4,-5,-6
+def send_new_person_event
+  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Stats.ping(:new_person)
+  PersonCache.put(:name,@person.id,@person.name)
+  PetProject.frobnosticate(
+      HexDigest.md5_sha1_hash_rot13(@person.inspect))
+end
+
+!CODE
+def send_new_person_event
+  Resque.enqueue(NewPersonEvent,:id => @person.id)
+end
+
+!CODE: callout=6,7,8,9
+def self.perform(id)
+  person = Person.find_by_id(id)
+  retry_on(:times => 5,
+           :when  => lambda { person.nil? }) do
+    MailerService.mail(:send_welcome_email,person)
+    Stats.ping(:new_person)
+    PersonCache.put(:name,@person.id,@person.name)
+    PetProject.frobnosticate(
+        HexDigest.md5_sha1_hash_rot13(@person.inspect))
+  end
+end
+
+!BULLETS
+An event fails!
+* <pre><code class="no-highlight">MailerService.mail(:send_welcome_email,person)</code></pre>
+* <pre><code class="no-highlight">Stats.ping(:new_person)</code></pre>
+* <pre><code class="no-highlight">PersonCache.put(:name,@person.id,@person.name)</code></pre>
+* BOOM!
+
+!BULLETS
+Just replay!
+* <pre><code style="white-space: nowrap" class="no-highlight">MailerService.mail(:send_welcome_email,person)</code></pre>
+* O_o
+
+!NORMAL
+MailService's Design
+not idempotent
+
+!BULLETS
+Idempotent
+* Operation applied many times
+* Only the first application has an effect
+
+!BULLETS
+Make Idempotent
+* Require a client-generated request id
+* Perform operation once per request id
+
+!CODE: callout=5,7,8,9,11,12
+class MailerServiceController
+  def create
+    type       = params[:mail_type]
+    data       = params[:data]
+    request_id = params[:request_id]
+
+    if request = Request.find_by_request_id(request_id)
+      respond_with(request.results)
+    else
+      results = Mailers.find(type).mail(data)
+      respond_with(Request.create!(:request_id => request_id,
+                                   :results    => results).results)
+    end
+  end
+end
+
+!CODE: callout=5,6,7,8,9
+def self.perform(id)
+  person = Person.find_by_id(id)
+  retry_on(:times => 5,
+           :when  => lambda { person.nil? }) do
+    mail_type = :send_welcome_email
+    MailerService.mail(
+      mail_type,
+      person,
+      :request_id => "#{mail_type}/#{@person.id}")
+
+    Stats.ping(:new_person)
+    PersonCache.put(:name,@person.id,@person.name)
+    PetProject.frobnosticate(
+        HexDigest.md5_sha1_hash_rot13(@person.inspect))
+  end
+end
+
+!BULLETS
+Call <code>mail</code> a zillion times
+* Only one mail sent&hellip;ever
+* Same result goes back
+
+!BULLETS
+What if&hellip;
+* &hellip;the mail fails at the gateway?
+* &hellip;two requests come in at the same time?
+* &hellip;my request ids clash?
+
+!IMAGE: background=ffffff
+images/wtf.png
+
+!NORMAL
+No system is perfect
+
+!SECTION
+Where do we begin?
+
+!BULLETS
+Historical Record
+* Log, log, log
+* Audit Activity
+
+!BULLETS
+Prevent Bad Data
+* AR Validations cannot be trusted
+* Database constraints
+* Sanity Check the rest
+* Fix bad data - don't code around it
+
+!BULLETS
+Fix Errors
+* Email <code>redalert@yourcompany.com</code>
+* Fix the problem or prevent the error
+* Downgrade to warnings as needed
+
+!BULLETS
+Extract Services
+* Don't just "be dumb"
+* Design for Idempotence
+* Provide help for the client
+
+!BULLETS
+In Review
+* Record history
+* Prevent bad data
+* Fix errors
+* Make Extracted Services "smart"
+
+!SECTION
+Does this sound fun?
+
+!IMAGE: background=262626
+images/LSLogo.jpg
+
+!IMAGE
+images/book.png
+
+!TITLE
+Thank You!
+@davetron5000
