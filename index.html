@@ -9,17 +9,14 @@
     <script src="js/utils.js"></script>
     <script src="js/sizer.js"></script>
     <script src="js/bullets.js"></script>
-    <script src="js/conman.js"></script>
+    <script src="js/trickster.js"></script>
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/highlight-solarized_light.min.css">
-    <!--
-    <link rel="stylesheet" href="css/highlight-default.min.css">
-    -->
     <link rel="stylesheet" href="css/styles.css">
     <script>
       $(window).load(function() {
-        Conman = ConmanLoader(ConmanDefaultConfig,{});
-        Conman.load();
+        Trickster = TricksterLoader(TricksterDefaultConfig,{});
+        Trickster.load();
       });
     </script>
   </head>
@@ -45,7 +42,7 @@
 <h1>Our story begins&hellip;</h1>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines=''>class PeopleController << ApplicationController
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>class PeopleController << ApplicationController
   def create
     @person = Person.create(params[:person])
     if @person.valid?
@@ -71,7 +68,7 @@ end</code></pre>
 <h1>Background Processing!</h1>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='4'>def create
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'>def create
   @person = Person.create(params[:person])
   if @person.valid?
     Resque.enqueue(NewPersonEvent,:id => @person.id)
@@ -82,7 +79,7 @@ end</code></pre>
 end</code></pre>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines=''>class NewPersonEvent
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>class NewPersonEvent
   def self.perform(id)
     person = Person.find(id)
     UserMailer.send_welcome_email(person)
@@ -93,7 +90,7 @@ end</code></pre>
 <h1>A few months later&hellip;</h1>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='4'>def create
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'>def create
   @person = Person.create(params[:person])
   if @person.valid?
     Resque.enqueue(NewPersonEvent,:id => @person.id) #! ETIMEDOUT
@@ -126,7 +123,7 @@ end</code></pre>
 </ul>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='2,9'>def create
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='2,9'>def create
   Person.transaction do
     @person = Person.create(params[:person])
     if @person.valid?
@@ -142,7 +139,7 @@ end</code></pre>
 <h1>A few weeks later&hellip;</h1>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='3'>class NewPersonEvent
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='3'>class NewPersonEvent
   def self.perform(id)
     person = Person.find(id) #! ActiveRecord::NotFoundError
     UserMailer.send_welcome_email(person)
@@ -159,7 +156,7 @@ end</code></pre>
 </ul>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines=''>class NewPersonEvent
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>class NewPersonEvent
   def self.perform(id)
     person = Person.find(id)
     UserMailer.send_welcome_email(person)
@@ -167,7 +164,7 @@ end</code></pre>
 end</code></pre>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='2,5,6,7,9'>class NewPersonEvent
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='2,5,6,7,9'>class NewPersonEvent
   include ResqueRetryOTron7000
 
   def self.perform(id)
@@ -202,7 +199,7 @@ end</code></pre>
 <h2>&hellip;run our business logic</h2>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='4,11'>class Person < ActiveRecord::Base
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='4,11'>class Person < ActiveRecord::Base
   # ...
 
   after_create :send_new_person_event
@@ -217,7 +214,7 @@ private
 end</code></pre>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='2,10' data-callout-lines='2,10'>def create
+<pre><code class='ruby' data-strikeouts='2,10' data-callout-lines='2,10'>def create
   Person.transaction do
     @person = Person.create(params[:person])
     if @person.valid?
@@ -230,7 +227,7 @@ end</code></pre>
 end</code></pre>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines=''>def create
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>def create
   @person = Person.create(params[:person])
   if @person.valid?
     redirect_to people_path
@@ -252,7 +249,7 @@ end</code></pre>
 <h2>&hellip;we need to log stats</h2>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='3'>def send_new_person_event
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='3'>def send_new_person_event
   Resque.enqueue(NewPersonEvent,:id => @person.id)
   Stats.ping(:new_person)
 end</code></pre>
@@ -262,7 +259,7 @@ end</code></pre>
 <h2>&hellip;and we now have a cache to warm</h2>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='4'>def send_new_person_event
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'>def send_new_person_event
   Resque.enqueue(NewPersonEvent,:id => @person.id)
   Stats.ping(:new_person)
   PersonCache.put(:name,@person.id,@person.name)
@@ -272,7 +269,7 @@ end</code></pre>
 <h1>Skunkworks project!</h1>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='5,6'>def send_new_person_event
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='5,6'>def send_new_person_event
   Resque.enqueue(NewPersonEvent,:id => @person.id)
   Stats.ping(:new_person)
   PersonCache.put(:name,@person.id,@person.name)
@@ -297,7 +294,7 @@ end</code></pre>
 </ul>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='8'>class NewPersonEvent
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='8'>class NewPersonEvent
   include ResqueRetryOTron
 
   def self.perform(id)
@@ -314,7 +311,7 @@ end</code></pre>
 <h2>a Refactoring's afoot!</h2>
 </section>
 <section class='CODE' data-transition='0'>
-<pre><code data-strikeouts='' data-callout-lines='3,4,5,6'>def send_new_person_event
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='3,4,5,6'>def send_new_person_event
   Resque.enqueue(NewPersonEvent,:id => @person.id)
   Stats.ping(:new_person)
   PersonCache.put(:name,@person.id,@person.name)
@@ -323,7 +320,7 @@ end</code></pre>
 end</code></pre>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='3,4,5,6' data-callout-lines='3,4,5,6'>def send_new_person_event
+<pre><code class='ruby' data-strikeouts='3,4,5,6' data-callout-lines='3,4,5,6'>def send_new_person_event
   Resque.enqueue(NewPersonEvent,:id => @person.id)
   Stats.ping(:new_person)
   PersonCache.put(:name,@person.id,@person.name)
@@ -332,12 +329,12 @@ end</code></pre>
 end</code></pre>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines=''>def send_new_person_event
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>def send_new_person_event
   Resque.enqueue(NewPersonEvent,:id => @person.id)
 end</code></pre>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='6,7,8,9'>def self.perform(id)
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='6,7,8,9'>def self.perform(id)
   person = Person.find_by_id(id)
   retry_on(:times => 5,
            :when  => lambda { person.nil? }) do
@@ -384,7 +381,7 @@ end</code></pre>
 </ul>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='5,7,8,9,11,12'>class MailerServiceController
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='5,7,8,9,11,12'>class MailerServiceController
   def create
     type       = params[:mail_type]
     data       = params[:data]
@@ -401,7 +398,7 @@ end</code></pre>
 end</code></pre>
 </section>
 <section class='CODE'>
-<pre><code data-strikeouts='' data-callout-lines='5,6,7,8,9'>def self.perform(id)
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='5,6,7,8,9'>def self.perform(id)
   person = Person.find_by_id(id)
   retry_on(:times => 5,
            :when  => lambda { person.nil? }) do
