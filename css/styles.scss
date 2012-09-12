@@ -1,0 +1,119 @@
+// LivingSocial Colors
+$honeycomb  : #e9ba2a;
+$clementine : #f0812b;
+$slushie    : #5fb8dd;
+$frosting   : #ea0b8c;
+$aloe       : #50886b;
+$berry      : #508395;
+$wasabi     : #9eae3d;
+$grape      : #92278f;
+$spice      : #eb3f3c;
+$wine       : #832e2f;
+$gray       : #262626;
+
+$vt100-green: #00ff00;
+$solarized-light-background2: #eee8d5;
+
+$main-font: "Arial rounded mt bold", Helvetica, Arial, sans;
+
+@mixin white-text-shadow($dist) {
+  color: white;
+  text-shadow: black $dist $dist ($dist * 2);
+}
+
+@mixin noise-background-image {
+  background-image: url('../images/background_noise.png');
+}
+
+body {
+  @include noise-background-image;
+}
+
+body.TITLE {
+  background-color: $honeycomb;
+  @include white-text-shadow(0.2em);
+}
+
+body.NORMAL {
+  background-color: $aloe;
+  @include white-text-shadow(0.2em);
+}
+
+body.SECTION {
+  background-color: $clementine;
+  @include white-text-shadow(0.2em);
+}
+
+body.BULLETS li code {
+  background-color: black;
+  color: $vt100-green;
+  border: solid thin green;
+  border-radius: .25em;
+}
+
+section.TITLE, section.SECTION, section.IMAGE, section.NORMAL {
+  text-align: center;
+}
+
+body.COMMANDLINE {
+  background-color: black;
+}
+
+body.CODE {
+  background-color: $solarized-light-background2;
+}
+
+section.BULLETS {
+  ul {
+    margin-left: 64px;
+  }
+  h1 {
+    text-align: center;
+    @include noise-background-image;
+    background-color: $wine;
+    @include white-text-shadow(0.05em);
+  }
+}
+
+section.COMMANDLINE code {
+  background-color: black;
+  color: $vt100-green;
+}
+
+section.COMMANDLINE .cli-prompt {
+  font-weight: bold;
+  color: white;
+}
+
+section.COMMANDLINE .cli-command {
+  color: #00ffff;
+}
+
+section.CODE code {
+  border-bottom-right-radius: 0.5em;
+  border-bottom-left-radius: 0.5em;
+  box-shadow: 0 0.3em 0.2em -0.2em darken($solarized-light-background2,20%);
+}
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: $main-font;
+}
+h2 {
+  font-size: 90%;
+}
+h3 {
+  font-size: 80%;
+}
+p {
+  font-family: Helvetica;
+}
+
+li {
+  font-family: $main-font;
+  list-style: disc;
+  list-style-position: outside;
+  margin-left: 1em;
+  margin-right: 1em;
+  line-height: 2em;
+}
+
