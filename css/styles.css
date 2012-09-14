@@ -1,0 +1,82 @@
+body {
+  background-image: url("../images/background_noise.png"); }
+
+body.TITLE {
+  background-color: #e9ba2a;
+  color: white;
+  text-shadow: black 0.2em 0.2em 0.4em; }
+
+body.NORMAL {
+  background-color: #50886b;
+  color: white;
+  text-shadow: black 0.2em 0.2em 0.4em; }
+
+body.SECTION {
+  background-color: #f0812b;
+  color: white;
+  text-shadow: black 0.2em 0.2em 0.4em; }
+
+body.BULLETS li code {
+  background-color: black;
+  color: lime;
+  border: solid thin green;
+  padding: 0.25em;
+  border-radius: .25em; }
+
+section.TITLE, section.SECTION, section.IMAGE, section.NORMAL {
+  text-align: center; }
+
+body.COMMANDLINE {
+  background-color: black; }
+
+body.CODE {
+  background-color: #eee8d5; }
+
+section.BULLETS ul {
+  margin-left: 64px; }
+section.BULLETS h1 {
+  text-align: center;
+  background-image: url("../images/background_noise.png");
+  background-color: #832e2f;
+  color: white;
+  text-shadow: black 0.05em 0.05em 0.1em; }
+
+section.COMMANDLINE code {
+  background-color: black;
+  color: lime; }
+
+section.COMMANDLINE .cli-prompt {
+  font-weight: bold;
+  color: white; }
+
+section.COMMANDLINE .cli-command {
+  color: #00ffff; }
+
+section.CODE code {
+  border-bottom-right-radius: 0.5em;
+  border-bottom-left-radius: 0.5em;
+  box-shadow: 0 0.3em 0.2em -0.2em #d1c08c; }
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: "Arial rounded mt bold", Helvetica, Arial, sans; }
+
+h1 {
+  margin-bottom: .25em; }
+
+h2 {
+  font-size: 90%; }
+
+h3 {
+  font-size: 80%; }
+
+p {
+  font-family: Helvetica; }
+
+li {
+  font-family: "Arial rounded mt bold", Helvetica, Arial, sans;
+  list-style: disc;
+  list-style-position: outside;
+  margin-left: 1em;
+  margin-right: 1em;
+  line-height: 2em; }
