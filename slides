@@ -35,9 +35,9 @@ end
 
 !BULLETS
 Problem
-* Enter my stuff
-* Save to DB
-* Wait for Mailer
+* Submit user info
+* Save it to DB
+* Wait for Mailer?
 * Bad resource allocation
 
 !SECTION
@@ -163,7 +163,7 @@ private
   end
 end
 
-!CODE: language=ruby callout=-2,-10
+!CODE: language=ruby callout=-2,-5,-10
 def create
   Person.transaction do
     @person = Person.create(params[:person])
@@ -294,52 +294,17 @@ Just replay!
 
 !NORMAL
 MailService's Design
-not idempotent
+is too "dumb"
 
 !BULLETS
-Idempotent
-* Operation applied many times
-* Only the first application has an effect
+What "smarts" would help?
+* Idempotent calls
+* Additional calls to expose state
 
 !BULLETS
 Make Idempotent
 * Require a client-generated request id
 * Perform operation once per request id
-
-!CODE: language=ruby callout=5,7,8,9,11,12
-class MailerServiceController
-  def create
-    type       = params[:mail_type]
-    data       = params[:data]
-    request_id = params[:request_id]
-
-    if request = Request.find_by_request_id(request_id)
-      respond_with(request.results)
-    else
-      results = Mailers.find(type).mail(data)
-      respond_with(Request.create!(:request_id => request_id,
-                                   :results    => results).results)
-    end
-  end
-end
-
-!CODE: language=ruby callout=5,6,7,8,9
-def self.perform(id)
-  person = Person.find_by_id(id)
-  retry_on(:times => 5,
-           :when  => lambda { person.nil? }) do
-    mail_type = :send_welcome_email
-    MailerService.mail(
-      mail_type,
-      person,
-      :request_id => "#{mail_type}/#{@person.id}")
-
-    Stats.ping(:new_person)
-    PersonCache.put(:name,@person.id,@person.name)
-    PetProject.frobnosticate(
-        HexDigest.md5_sha1_hash_rot13(@person.inspect))
-  end
-end
 
 !BULLETS
 Call <code>mail</code> a zillion times
@@ -347,8 +312,14 @@ Call <code>mail</code> a zillion times
 * Same result goes back
 
 !BULLETS
+Additional calls
+* What emails have been sent?
+* Client checks first before sending
+
+!BULLETS
 What if&hellip;
 * &hellip;the mail fails at the gateway?
+* &hellip;I forget to check first?
 * &hellip;two requests come in at the same time?
 * &hellip;my request ids clash?
 
