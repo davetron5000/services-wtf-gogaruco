@@ -47,7 +47,7 @@ Background Processing!
 def create
   @person = Person.create(params[:person])
   if @person.valid?
-    Resque.enqueue(NewPersonEvent,:id => @person.id)
+    Resque.enqueue(NewPersonEvent,@person.id)
     redirect_to people_path
   else
      # ...
@@ -69,7 +69,7 @@ A few months later&hellip;
 def create
   @person = Person.create(params[:person])
   if @person.valid?
-    Resque.enqueue(NewPersonEvent,:id => @person.id) #! ETIMEDOUT
+    Resque.enqueue(NewPersonEvent,@person.id) #! ETIMEDOUT
   else
      # ...
   end
@@ -98,7 +98,7 @@ def create
   Person.transaction do
     @person = Person.create(params[:person])
     if @person.valid?
-      Resque.enqueue(NewPersonEvent,:id => @person.id)
+      Resque.enqueue(NewPersonEvent,@person.id)
       redirect_to people_path
     else
        # ...
@@ -159,7 +159,7 @@ class Person < ActiveRecord::Base
 private
 
   def send_new_person_event
-    Resque.enqueue(NewPersonEvent,:id => @person.id)
+    Resque.enqueue(NewPersonEvent,@person.id)
   end
 end
 
@@ -168,7 +168,7 @@ def create
   Person.transaction do
     @person = Person.create(params[:person])
     if @person.valid?
-      Resque.enqueue(NewPersonEvent,:id => @person.id)
+      Resque.enqueue(NewPersonEvent,@person.id)
       redirect_to people_path
     else
        # ...
@@ -198,7 +198,7 @@ A few months later&hellip;
 
 !CODE: language=ruby callout=3
 def send_new_person_event
-  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Resque.enqueue(NewPersonEvent,@person.id)
   Stats.ping(:new_person)
 end
 
@@ -208,7 +208,7 @@ Weeks go by&hellip;
 
 !CODE: language=ruby callout=4
 def send_new_person_event
-  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Resque.enqueue(NewPersonEvent,@person.id)
   Stats.ping(:new_person)
   PersonCache.put(:name,@person.id,@person.name)
 end
@@ -218,7 +218,7 @@ Skunkworks project!
 
 !CODE: language=ruby callout=5,6
 def send_new_person_event
-  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Resque.enqueue(NewPersonEvent,@person.id)
   Stats.ping(:new_person)
   PersonCache.put(:name,@person.id,@person.name)
   PetProject.frobnosticate(
@@ -246,7 +246,7 @@ a Refactoring's afoot!
 
 !CODE: language=ruby callout=3,4,5,6 transition=0
 def send_new_person_event
-  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Resque.enqueue(NewPersonEvent,@person.id)
   Stats.ping(:new_person)
   PersonCache.put(:name,@person.id,@person.name)
   PetProject.frobnosticate(
@@ -255,7 +255,7 @@ end
 
 !CODE: language=ruby callout=-3,-4,-5,-6
 def send_new_person_event
-  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Resque.enqueue(NewPersonEvent,@person.id)
   Stats.ping(:new_person)
   PersonCache.put(:name,@person.id,@person.name)
   PetProject.frobnosticate(
@@ -264,7 +264,7 @@ end
 
 !CODE: language=ruby
 def send_new_person_event
-  Resque.enqueue(NewPersonEvent,:id => @person.id)
+  Resque.enqueue(NewPersonEvent,@person.id)
 end
 
 !CODE: language=ruby callout=6,7,8,9
