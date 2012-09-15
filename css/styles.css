@@ -1,3 +1,13 @@
+a {
+  color: white;
+  text-decoration: none; }
+  a:hover {
+    text-decoration: underline;
+    color: white;
+    text-shadow: black 0.1em 0.1em 0.2em; }
+  a:visited {
+    color: white; }
+
 body {
   background-image: url("../images/background_noise.png"); }
 
