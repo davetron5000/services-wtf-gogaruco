@@ -25,6 +25,18 @@ $main-font: "Arial rounded mt bold", Helvetica, Arial, sans;
   background-image: url('../images/background_noise.png');
 }
 
+a {
+  color: white;
+  text-decoration:none;
+  &:hover {
+    text-decoration: underline;
+    @include white-text-shadow(0.1em);
+  }
+  &:visited {
+    color: white;
+  }
+}
+
 body {
   @include noise-background-image;
 }
