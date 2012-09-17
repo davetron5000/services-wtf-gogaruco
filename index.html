@@ -3,7 +3,7 @@
   <head>
     <title>Services, Scale, Backgrounding and WTF is going on here?!??!</title>
     <script src="js/lib/jquery-1.8.0.min.js"></script>
-    <script src="js/lib/highlight-fc32801.min.js"></script>
+    <script src="js/lib/highlight-7.1.min.js"></script>
     <script src="js/lib/jquerytypewriter.js"></script>
     <script src="js/lib/underscore-1.3.3.min.js"></script>
     <script src="js/utils.js"></script>
@@ -12,7 +12,7 @@
     <script src="js/trickster.js"></script>
     <script src="js/custom.js"></script>
     <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/highlight-solarized_light.min.css">
+    <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/styles.css">
     <script>
       $(window).load(function() {
@@ -43,18 +43,18 @@
 <h1>Our story begins&hellip;</h1>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>class PeopleController << ApplicationController
-  def create
-    @person = Person.create(params[:person])
-    if @person.valid?
-      UserMailer.send_welcome_email(person)
-      redirect_to people_path
-    else
-      flash[:error] = 'Invalid Data'
-      redirect_to new_person_path
-    end
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''><span class='line line-1 ' >class PeopleController << ApplicationController</span>
+<span class='line line-2 ' >  def create</span>
+<span class='line line-3 ' >    @person = Person.create(params[:person])</span>
+<span class='line line-4 ' >    if @person.valid?</span>
+<span class='line line-5 ' >      UserMailer.send_welcome_email(person)</span>
+<span class='line line-6 ' >      redirect_to people_path</span>
+<span class='line line-7 ' >    else</span>
+<span class='line line-8 ' >      flash[:error] = 'Invalid Data'</span>
+<span class='line line-9 ' >      redirect_to new_person_path</span>
+<span class='line line-10 ' >    end</span>
+<span class='line line-11 ' >  end</span>
+<span class='line line-12 ' >end</span></code></pre>
 </section>
 <section class='BULLETS'>
 <h1>Problem</h1>
@@ -69,36 +69,36 @@ end</code></pre>
 <h1>Background Processing!</h1>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'>def create
-  @person = Person.create(params[:person])
-  if @person.valid?
-    Resque.enqueue(NewPersonEvent,@person.id)
-    redirect_to people_path
-  else
-     # ...
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'><span class='line line-1 ' >def create</span>
+<span class='line line-2 ' >  @person = Person.create(params[:person])</span>
+<span class='line line-3 ' >  if @person.valid?</span>
+<div class='lines-callout'><span class='line line-4 line-callout' >    Resque.enqueue(NewPersonEvent,@person.id)</span>
+</div><span class='line line-5 ' >    redirect_to people_path</span>
+<span class='line line-6 ' >  else</span>
+<span class='line line-7 ' >     # ...</span>
+<span class='line line-8 ' >  end</span>
+<span class='line line-9 ' >end</span></code></pre>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>class NewPersonEvent
-  def self.perform(id)
-    person = Person.find(id)
-    UserMailer.send_welcome_email(person)
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''><span class='line line-1 ' >class NewPersonEvent</span>
+<span class='line line-2 ' >  def self.perform(id)</span>
+<span class='line line-3 ' >    person = Person.find(id)</span>
+<span class='line line-4 ' >    UserMailer.send_welcome_email(person)</span>
+<span class='line line-5 ' >  end</span>
+<span class='line line-6 ' >end</span></code></pre>
 </section>
 <section class='SECTION'>
 <h1>A few months later&hellip;</h1>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'>def create
-  @person = Person.create(params[:person])
-  if @person.valid?
-    Resque.enqueue(NewPersonEvent,@person.id) #! ETIMEDOUT
-  else
-     # ...
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'><span class='line line-1 ' >def create</span>
+<span class='line line-2 ' >  @person = Person.create(params[:person])</span>
+<span class='line line-3 ' >  if @person.valid?</span>
+<div class='lines-callout'><span class='line line-4 line-callout' >    Resque.enqueue(NewPersonEvent,@person.id) #! ETIMEDOUT</span>
+</div><span class='line line-5 ' >  else</span>
+<span class='line line-6 ' >     # ...</span>
+<span class='line line-7 ' >  end</span>
+<span class='line line-8 ' >end</span></code></pre>
 </section>
 <section class='BULLETS'>
 <h1>Timeout to Redis</h1>
@@ -124,28 +124,28 @@ end</code></pre>
 </ul>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='2,9'>def create
-  Person.transaction do
-    @person = Person.create(params[:person])
-    if @person.valid?
-      Resque.enqueue(NewPersonEvent,@person.id)
-      redirect_to people_path
-    else
-       # ...
-    end
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='2,9'><span class='line line-1 ' >def create</span>
+<div class='lines-callout'><span class='line line-2 line-callout' >  Person.transaction do</span>
+</div><span class='line line-3 ' >    @person = Person.create(params[:person])</span>
+<span class='line line-4 ' >    if @person.valid?</span>
+<span class='line line-5 ' >      Resque.enqueue(NewPersonEvent,@person.id)</span>
+<span class='line line-6 ' >      redirect_to people_path</span>
+<span class='line line-7 ' >    else</span>
+<span class='line line-8 ' >       # ...</span>
+<div class='lines-callout'><span class='line line-9 line-callout' >    end</span>
+</div><span class='line line-10 ' >  end</span>
+<span class='line line-11 ' >end</span></code></pre>
 </section>
 <section class='SECTION'>
 <h1>A few weeks later&hellip;</h1>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='3'>class NewPersonEvent
-  def self.perform(id)
-    person = Person.find(id) #! ActiveRecord::NotFoundError
-    UserMailer.send_welcome_email(person)
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='3'><span class='line line-1 ' >class NewPersonEvent</span>
+<span class='line line-2 ' >  def self.perform(id)</span>
+<div class='lines-callout'><span class='line line-3 line-callout' >    person = Person.find(id) #! ActiveRecord::NotFoundError</span>
+</div><span class='line line-4 ' >    UserMailer.send_welcome_email(person)</span>
+<span class='line line-5 ' >  end</span>
+<span class='line line-6 ' >end</span></code></pre>
 </section>
 <section class='BULLETS'>
 <h1>WTF?</h1>
@@ -157,25 +157,25 @@ end</code></pre>
 </ul>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>class NewPersonEvent
-  def self.perform(id)
-    person = Person.find(id)
-    UserMailer.send_welcome_email(person)
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''><span class='line line-1 ' >class NewPersonEvent</span>
+<span class='line line-2 ' >  def self.perform(id)</span>
+<span class='line line-3 ' >    person = Person.find(id)</span>
+<span class='line line-4 ' >    UserMailer.send_welcome_email(person)</span>
+<span class='line line-5 ' >  end</span>
+<span class='line line-6 ' >end</span></code></pre>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='2,5,6,7,9'>class NewPersonEvent
-  include ResqueRetryOTron7000
-
-  def self.perform(id)
-    person = Person.find_by_id(id)
-    retry_on(:times => 5,
-             :when  => lambda { person.nil? }) do
-      UserMailer.send_welcome_email(person)
-    end
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='2,5,6,7,9'><span class='line line-1 ' >class NewPersonEvent</span>
+<div class='lines-callout'><span class='line line-2 line-callout' >  include ResqueRetryOTron7000</span>
+</div><span class='line line-3 ' ></span>
+<span class='line line-4 ' >  def self.perform(id)</span>
+<div class='lines-callout'><span class='line line-5 line-callout' >    person = Person.find_by_id(id)</span>
+<span class='line line-6 line-callout' >    retry_on(:times => 5,</span>
+<span class='line line-7 line-callout' >             :when  => lambda { person.nil? }) do</span>
+</div><span class='line line-8 ' >      UserMailer.send_welcome_email(person)</span>
+<div class='lines-callout'><span class='line line-9 line-callout' >    end</span>
+</div><span class='line line-10 ' >  end</span>
+<span class='line line-11 ' >end</span></code></pre>
 </section>
 <section class='BULLETS'>
 <h1>Better(ish)</h1>
@@ -200,42 +200,42 @@ end</code></pre>
 <h2>&hellip;run our business logic</h2>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='4,11'>class Person < ActiveRecord::Base
-  # ...
-
-  after_create :send_new_person_event
-
-  # ...
-
-private
-
-  def send_new_person_event
-    Resque.enqueue(NewPersonEvent,@person.id)
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='4,11'><span class='line line-1 ' >class Person < ActiveRecord::Base</span>
+<span class='line line-2 ' >  # ...</span>
+<span class='line line-3 ' ></span>
+<div class='lines-callout'><span class='line line-4 line-callout' >  after_create :send_new_person_event</span>
+</div><span class='line line-5 ' ></span>
+<span class='line line-6 ' >  # ...</span>
+<span class='line line-7 ' ></span>
+<span class='line line-8 ' >private</span>
+<span class='line line-9 ' ></span>
+<span class='line line-10 ' >  def send_new_person_event</span>
+<div class='lines-callout'><span class='line line-11 line-callout' >    Resque.enqueue(NewPersonEvent,@person.id)</span>
+</div><span class='line line-12 ' >  end</span>
+<span class='line line-13 ' >end</span></code></pre>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='2,5,10' data-callout-lines='2,5,10'>def create
-  Person.transaction do
-    @person = Person.create(params[:person])
-    if @person.valid?
-      Resque.enqueue(NewPersonEvent,@person.id)
-      redirect_to people_path
-    else
-       # ...
-    end
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='2,5,10' data-callout-lines='2,5,10'><span class='line line-1 ' >def create</span>
+<div class='lines-callout'><span class='line line-2 line-callout' >  Person.transaction do</span>
+</div><span class='line line-3 ' >    @person = Person.create(params[:person])</span>
+<span class='line line-4 ' >    if @person.valid?</span>
+<div class='lines-callout'><span class='line line-5 line-callout' >      Resque.enqueue(NewPersonEvent,@person.id)</span>
+</div><span class='line line-6 ' >      redirect_to people_path</span>
+<span class='line line-7 ' >    else</span>
+<span class='line line-8 ' >       # ...</span>
+<span class='line line-9 ' >    end</span>
+<div class='lines-callout'><span class='line line-10 line-callout' >  end</span>
+</div><span class='line line-11 ' >end</span></code></pre>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>def create
-  @person = Person.create(params[:person])
-  if @person.valid?
-    redirect_to people_path
-  else
-     # ...
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''><span class='line line-1 ' >def create</span>
+<span class='line line-2 ' >  @person = Person.create(params[:person])</span>
+<span class='line line-3 ' >  if @person.valid?</span>
+<span class='line line-4 ' >    redirect_to people_path</span>
+<span class='line line-5 ' >  else</span>
+<span class='line line-6 ' >     # ...</span>
+<span class='line line-7 ' >  end</span>
+<span class='line line-8 ' >end</span></code></pre>
 </section>
 <section class='BULLETS'>
 <h1>Reasonable</h1>
@@ -250,33 +250,33 @@ end</code></pre>
 <h2>&hellip;we need to log stats</h2>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='3'>def send_new_person_event
-  Resque.enqueue(NewPersonEvent,@person.id)
-  Stats.ping(:new_person)
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='3'><span class='line line-1 ' >def send_new_person_event</span>
+<span class='line line-2 ' >  Resque.enqueue(NewPersonEvent,@person.id)</span>
+<div class='lines-callout'><span class='line line-3 line-callout' >  Stats.ping(:new_person)</span>
+</div><span class='line line-4 ' >end</span></code></pre>
 </section>
 <section class='NORMAL'>
 <h1>Weeks go by&hellip;</h1>
 <h2>&hellip;and we now have a cache to warm</h2>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'>def send_new_person_event
-  Resque.enqueue(NewPersonEvent,@person.id)
-  Stats.ping(:new_person)
-  PersonCache.put(:name,@person.id,@person.name)
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='4'><span class='line line-1 ' >def send_new_person_event</span>
+<span class='line line-2 ' >  Resque.enqueue(NewPersonEvent,@person.id)</span>
+<span class='line line-3 ' >  Stats.ping(:new_person)</span>
+<div class='lines-callout'><span class='line line-4 line-callout' >  PersonCache.put(:name,@person.id,@person.name)</span>
+</div><span class='line line-5 ' >end</span></code></pre>
 </section>
 <section class='NORMAL'>
 <h1>Skunkworks project!</h1>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='5,6'>def send_new_person_event
-  Resque.enqueue(NewPersonEvent,@person.id)
-  Stats.ping(:new_person)
-  PersonCache.put(:name,@person.id,@person.name)
-  PetProject.frobnosticate(
-      HexDigest.md5_sha1_hash_rot13(@person.inspect))
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='5,6'><span class='line line-1 ' >def send_new_person_event</span>
+<span class='line line-2 ' >  Resque.enqueue(NewPersonEvent,@person.id)</span>
+<span class='line line-3 ' >  Stats.ping(:new_person)</span>
+<span class='line line-4 ' >  PersonCache.put(:name,@person.id,@person.name)</span>
+<div class='lines-callout'><span class='line line-5 line-callout' >  PetProject.frobnosticate(</span>
+<span class='line line-6 line-callout' >      HexDigest.md5_sha1_hash_rot13(@person.inspect))</span>
+</div><span class='line line-7 ' >end</span></code></pre>
 </section>
 <section class='BULLETS'>
 <h1>Reasonable?</h1>
@@ -295,57 +295,57 @@ end</code></pre>
 </ul>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='8'>class NewPersonEvent
-  include ResqueRetryOTron
-
-  def self.perform(id)
-    person = Person.find_by_id(id)
-    retry_on(:times => 5,
-             :when  => lambda { person.nil? }) do
-      MailerService.mail(:send_welcome_email,person)
-    end
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='8'><span class='line line-1 ' >class NewPersonEvent</span>
+<span class='line line-2 ' >  include ResqueRetryOTron</span>
+<span class='line line-3 ' ></span>
+<span class='line line-4 ' >  def self.perform(id)</span>
+<span class='line line-5 ' >    person = Person.find_by_id(id)</span>
+<span class='line line-6 ' >    retry_on(:times => 5,</span>
+<span class='line line-7 ' >             :when  => lambda { person.nil? }) do</span>
+<div class='lines-callout'><span class='line line-8 line-callout' >      MailerService.mail(:send_welcome_email,person)</span>
+</div><span class='line line-9 ' >    end</span>
+<span class='line line-10 ' >  end</span>
+<span class='line line-11 ' >end</span></code></pre>
 </section>
 <section class='NORMAL'>
 <h1>Meanwhile&hellip;</h1>
 <h2>a Refactoring's afoot!</h2>
 </section>
 <section class='CODE' data-transition='0'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='3,4,5,6'>def send_new_person_event
-  Resque.enqueue(NewPersonEvent,@person.id)
-  Stats.ping(:new_person)
-  PersonCache.put(:name,@person.id,@person.name)
-  PetProject.frobnosticate(
-      HexDigest.md5_sha1_hash_rot13(@person.inspect))
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='3,4,5,6'><span class='line line-1 ' >def send_new_person_event</span>
+<span class='line line-2 ' >  Resque.enqueue(NewPersonEvent,@person.id)</span>
+<div class='lines-callout'><span class='line line-3 line-callout' >  Stats.ping(:new_person)</span>
+<span class='line line-4 line-callout' >  PersonCache.put(:name,@person.id,@person.name)</span>
+<span class='line line-5 line-callout' >  PetProject.frobnosticate(</span>
+<span class='line line-6 line-callout' >      HexDigest.md5_sha1_hash_rot13(@person.inspect))</span>
+</div><span class='line line-7 ' >end</span></code></pre>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='3,4,5,6' data-callout-lines='3,4,5,6'>def send_new_person_event
-  Resque.enqueue(NewPersonEvent,@person.id)
-  Stats.ping(:new_person)
-  PersonCache.put(:name,@person.id,@person.name)
-  PetProject.frobnosticate(
-      HexDigest.md5_sha1_hash_rot13(@person.inspect))
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='3,4,5,6' data-callout-lines='3,4,5,6'><span class='line line-1 ' >def send_new_person_event</span>
+<span class='line line-2 ' >  Resque.enqueue(NewPersonEvent,@person.id)</span>
+<div class='lines-callout'><span class='line line-3 line-callout' >  Stats.ping(:new_person)</span>
+<span class='line line-4 line-callout' >  PersonCache.put(:name,@person.id,@person.name)</span>
+<span class='line line-5 line-callout' >  PetProject.frobnosticate(</span>
+<span class='line line-6 line-callout' >      HexDigest.md5_sha1_hash_rot13(@person.inspect))</span>
+</div><span class='line line-7 ' >end</span></code></pre>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines=''>def send_new_person_event
-  Resque.enqueue(NewPersonEvent,@person.id)
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines=''><span class='line line-1 ' >def send_new_person_event</span>
+<span class='line line-2 ' >  Resque.enqueue(NewPersonEvent,@person.id)</span>
+<span class='line line-3 ' >end</span></code></pre>
 </section>
 <section class='CODE'>
-<pre><code class='ruby' data-strikeouts='' data-callout-lines='6,7,8,9'>def self.perform(id)
-  person = Person.find_by_id(id)
-  retry_on(:times => 5,
-           :when  => lambda { person.nil? }) do
-    MailerService.mail(:send_welcome_email,person)
-    Stats.ping(:new_person)
-    PersonCache.put(:name,@person.id,@person.name)
-    PetProject.frobnosticate(
-        HexDigest.md5_sha1_hash_rot13(@person.inspect))
-  end
-end</code></pre>
+<pre><code class='ruby' data-strikeouts='' data-callout-lines='6,7,8,9'><span class='line line-1 ' >def self.perform(id)</span>
+<span class='line line-2 ' >  person = Person.find_by_id(id)</span>
+<span class='line line-3 ' >  retry_on(:times => 5,</span>
+<span class='line line-4 ' >           :when  => lambda { person.nil? }) do</span>
+<span class='line line-5 ' >    MailerService.mail(:send_welcome_email,person)</span>
+<div class='lines-callout'><span class='line line-6 line-callout' >    Stats.ping(:new_person)</span>
+<span class='line line-7 line-callout' >    PersonCache.put(:name,@person.id,@person.name)</span>
+<span class='line line-8 line-callout' >    PetProject.frobnosticate(</span>
+<span class='line line-9 line-callout' >        HexDigest.md5_sha1_hash_rot13(@person.inspect))</span>
+</div><span class='line line-10 ' >  end</span>
+<span class='line line-11 ' >end</span></code></pre>
 </section>
 <section class='BULLETS'>
 <h1>An event fails!</h1>
